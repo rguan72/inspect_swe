@@ -288,6 +288,8 @@ def gemini_cli(
 def build_gemini_settings(mcp_servers: Sequence[MCPServerConfig]) -> str:
     """Build Gemini CLI settings.json content (privacy + MCP server configs)."""
     settings: dict[str, Any] = {
+        "general": {"plan": {"enabled": False}},
+        "tools": {"exclude": ["update_topic"]},
         "privacy": {"usageStatisticsEnabled": False},
         # Pin the auth type to the Gemini API key. As of recent gemini-cli
         # releases, getAuthTypeFromEnv() resolves auth to the new

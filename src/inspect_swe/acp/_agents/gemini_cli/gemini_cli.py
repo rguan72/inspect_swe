@@ -1,5 +1,6 @@
 """Gemini CLI agent via native ``--experimental-acp`` support."""
 
+import json
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -20,6 +21,26 @@ from inspect_swe.acp import ACPAgent
 from inspect_swe.acp.agent import ACPAgentParams
 
 logger = logging.getLogger(__name__)
+
+_GEMINI_DEFAULT_REQUEST_TIMEOUT_FLAG_ID = 45773134
+_GEMINI_DEFAULT_REQUEST_TIMEOUT_SECONDS = 3600
+
+
+def _gemini_experiments_json(
+    timeout_seconds: int = _GEMINI_DEFAULT_REQUEST_TIMEOUT_SECONDS,
+) -> str:
+    return json.dumps(
+        {
+            "flags": [
+                {
+                    "flagId": _GEMINI_DEFAULT_REQUEST_TIMEOUT_FLAG_ID,
+                    "intValue": str(timeout_seconds),
+                }
+            ],
+            "experimentIds": [],
+        },
+        indent=2,
+    )
 
 
 class GeminiCli(ACPAgent):
@@ -90,8 +111,10 @@ class GeminiCli(ACPAgent):
             all_mcp_servers = list(self.mcp_servers) + list(bridge.mcp_server_configs)
             settings_json = build_gemini_settings(all_mcp_servers)
             gemini_settings_dir = f"{sandbox_home}/.gemini"
+            gemini_experiments_path = f"{gemini_settings_dir}/inspect-experiments.json"
             await sbox.exec(["mkdir", "-p", gemini_settings_dir], user=self.user)
             await sbox.write_file(f"{gemini_settings_dir}/settings.json", settings_json)
+            await sbox.write_file(gemini_experiments_path, _gemini_experiments_json())
 
             # Install skills.
             if self._resolved_skills:
@@ -111,10 +134,17 @@ class GeminiCli(ACPAgent):
             # McpClientManager.startConfiguredMcpServers() returns immediately
             # without connecting to any MCP server (and without logging). This
             # env var short-circuits the trust check (core/utils/trust.ts).
+            #
+            # GEMINI_EXP: Gemini CLI's default fetch timeout is short enough for
+            # bridge filters that intentionally hold the model response while an
+            # auditor chooses tool results. Extending the CLI request timeout
+            # prevents it from abandoning that pending turn and retrying without
+            # the prior function call/result in its session history.
             agent_env = {
                 "GOOGLE_GEMINI_BASE_URL": f"http://127.0.0.1:{bridge.port}",
                 "GEMINI_API_KEY": "api-key",
                 "GEMINI_CLI_TRUST_WORKSPACE": "true",
+                "GEMINI_EXP": gemini_experiments_path,
                 "PATH": f"{node_dir}:/usr/local/bin:/usr/bin:/bin",
                 "HOME": sandbox_home,
             } | self.env
