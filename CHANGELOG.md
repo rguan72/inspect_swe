@@ -1,3 +1,75 @@
+## Unreleased
+
+- Codex CLI and Claude Code: Support checkpointing and resuming runs via `checkpointer()`, restoring session/attempt state across resumes.
+- All agents: When no `cwd` is specified and the sandbox's default working directory is `/` (i.e. the image has no `WORKDIR`), run the agent in the user's home directory instead of the container root.
+
+## 0.2.63 (10 June 2026)
+
+- Remove ACP patch for connection initialization order issue (resolved in ACP 0.10.1).
+- Codex CLI: Resolve "stable"/"latest" via the GitHub `releases/latest` endpoint — the full releases listing for openai/codex frequently 504s.
+
+## 0.2.62 (05 June 2026)
+
+- Claude Code: Present the real served model as the agent's own identity (e.g. its "You are powered by the model …" system prompt) instead of the bridge sentinel. Added a `model_config` parameter to override the presented identity.
+- Claude Code: `opus_model` / `sonnet_model` / `haiku_model` / `subagent_model` are now actually honored — previously the bridge fallback collapsed them onto a single model.
+- Tracing: Only trace full session output when `debug` option is passed.
+
+## 0.2.61 (03 June 2026)
+
+- Claude Code: Fix system prompt being re-sent on resumed turns.
+- Codex CLI: Align `OpenAIAPI`-derived custom providers by their declared `service_model_name()`.
+- Codex CLI: Fall back to a bundled model catalog when the version-matched `models.json` can't be fetched.
+
+## 0.2.60 (02 June 2026)
+
+- Update Inspect AI dependency to 0.3.234
+
+## 0.2.59 (31 May 2026)
+
+- Codex CLI: Detect and apply agent spans automatically from Codex event stream.
+
+## 0.2.57 (30 May 2026)
+
+- Codex CLI: Align the system prompt and tool set with the real bridged model. `model_config` now defaults to `None`, deriving Codex's `--model` slug from the actual model. Pass an explicit `model_config` to override.
+- Codex CLI: Add options for enabling/disabling `web_search` and `goals` tools (both default to enabled).
+- Codex CLI: Improve MCP tests to check for correct tool names and assert results.
+- Gemini CLI: Explicity set auth type to "gemini-api-key" (required for recent versions of the CLI).
+
+## 0.2.56 (25 May 2026)
+
+- OpenCode: Install ripgrep for access to native skills.
+- Claude Code: Improved live event capture (no longer requires injection of spans into transcript).
+- Claude Code: Support for importing transcripts with new JSONL sub-agent file layout.
+- Claude Code (ACP): Use officially supported ACP client (@agentclientprotocol/claude-agent-acp)
+
+## 0.2.55 (16 May 2026)
+
+- Workaround for `agent_client_protocol` v0.10.0 connection bug.
+
+## 0.2.54 (13 May 2026)
+
+- Claude Code (ACP): Allocate per-invocation bridge port.
+
+## 0.2.53 (13 May 2026)
+
+- Pin `agent-client-protocol>=0.9.0,<0.10` until [init ordering bug](https://github.com/agentclientprotocol/python-sdk/issues/97) is fixed.
+
+## 0.2.52 (09 May 2026)
+
+- OpenCode: New agent backend wrapping [OpenCode](https://github.com/anomalyco/opencode).
+- Codex CLI: Disable telemetry by default.
+- Gemini CLI: Disable telemetry by default.
+
+## 0.2.51 (07 May 2026)
+
+- Gemini CLI: Fix MCP registration via GEMINI_CLI_TRUST_WORKSPACE.
+- Mini SWE Agent: Ensure that pip is available before attempting installation.
+
+## 0.2.50 (29 April 2026)
+
+- Codex CLI: Run ACP mode with approval_policy: never and sandbox_mode: danger_full_access
+- Codex CLI: Fix for MCP tool calling (bump to Inspect v0.3.214 which has the fix).
+
 ## 0.2.48 (26 April 2026)
 
 - Update download location for Claude Code binaries.
